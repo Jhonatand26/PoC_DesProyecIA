@@ -1,0 +1,20 @@
+# Estandarizar saltos de línea para todo el equipo
+* text=auto eol=lf
+
+# Archivos que siempre deben ser LF
+*.py text eol=lf
+*.toml text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+*.md text eol=lf
+*.txt text eol=lf
+*.proto text eol=lf
+*.gitignore text eol=lf
+
+# Archivos binarios — no tocar
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.h5 binary
+*.pt binary
+*.bin binary
