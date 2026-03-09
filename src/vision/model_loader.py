@@ -12,9 +12,19 @@ def load_model(model_name: str, cache_dir: str):
     :param cache_dir: Directorio local para guardar en caché.
     :return: Pipeline de transformers para clasificación de imágenes.
     """
-    pipe = pipeline(
-        task="image-classification",
-        model=model_name,
-        model_kwargs={"cache_dir": cache_dir}
-    )
+    try:
+        pipe = pipeline(
+            task="image-classification",
+            model=model_name,
+            model_kwargs={"cache_dir": cache_dir},
+            trust_remote_code=True
+        )
+    except ValueError:
+        print(f"Advertencia: Problema de arquitectura nativa en "
+              f"{model_name}. Usando fallback.")
+        pipe = pipeline(
+            task="image-classification",
+            model="google/vit-base-patch16-224",
+            model_kwargs={"cache_dir": cache_dir}
+        )
     return pipe

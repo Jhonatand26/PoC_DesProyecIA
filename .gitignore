@@ -1,48 +1,10 @@
-# Python
+# Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
-*.pyo
-.venv/
-*.egg-info/
-dist/
-build/
+*$py.class
 
-# UV
-.python-version
+# Pytest cache
+.pytest_cache/
 
-# Variables de entorno
-.env
-.env.local
-.env.production
-
-# Modelos
-*.h5
-*.pt
-*.bin
-*.onnx
-*.pkl
-
-# HuggingFace cache
-.cache/
-
-# MLflow
-mlruns/
-mlartifacts/
-
-# Data
-data/raw/
-data/processed/
-
-# Jupyter
-.ipynb_checkpoints/
-*.ipynb
-
-# VS Code
-.vscode/
-
-# Windows
-Thumbs.db
-desktop.ini
-
-# Docker
-.dockerignore
+# Model cache directory
+hf_cache/
