@@ -3,15 +3,5 @@ name = "poc-desproyecia"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
-requires-python = ">=3.11"
-dependencies = [
-    "flake8>=7.3.0",
-    "numpy>=2.4.2",
-    "pillow>=12.1.1",
-    "pytest>=9.0.2",
-    "python-dotenv>=1.2.2",
-    "streamlit>=1.55.0",
-    "torch>=2.10.0",
-    "torchvision>=0.25.0",
-    "transformers>=5.3.0",
-]
+requires-python = ">=3.14"
+dependencies = []
