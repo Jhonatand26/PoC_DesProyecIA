@@ -19,9 +19,9 @@ def load_model(model_name: str, cache_dir: str):
             model_kwargs={"cache_dir": cache_dir},
             trust_remote_code=True
         )
-    except ValueError:
-        print(f"Advertencia: Problema de arquitectura nativa en "
-              f"{model_name}. Usando fallback.")
+    except (OSError, RuntimeError, Exception) as e:
+        print(f"Advertencia: No se pudo cargar {model_name}: {e}. "
+              f"Usando fallback.")
         pipe = pipeline(
             task="image-classification",
             model="google/vit-base-patch16-224",

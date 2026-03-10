@@ -9,7 +9,8 @@ from src.vision.classifier import classify_image
 
 
 @patch('src.vision.model_loader.pipeline')
-def test_load_model(mock_pipeline):
+def test_load_model_success(mock_pipeline):
+    """Verifica que load_model retorna el pipeline del modelo principal."""
     mock_pipeline.return_value = "mock_pipe"
     pipe = load_model("model_name", "cache_dir")
 
@@ -22,10 +23,21 @@ def test_load_model(mock_pipeline):
     )
 
 
+@patch('src.vision.model_loader.pipeline')
+def test_load_model_fallback(mock_pipeline):
+    """Verifica que load_model activa el fallback cuando el modelo falla."""
+    mock_pipeline.side_effect = [OSError("modelo roto"), "fallback_pipe"]
+    pipe = load_model("modelo_roto", "cache_dir")
+
+    assert pipe == "fallback_pipe"
+    assert mock_pipeline.call_count == 2
+
+
 def test_preprocess_image():
+    """Verifica que preprocess_image convierte a RGB y redimensiona a 224x224."""
     with tempfile.NamedTemporaryFile(suffix=".jpg", delete=False) as f:
         temp_img_path = f.name
-        img = Image.new("L", (100, 100))  # Escala de grises
+        img = Image.new("L", (100, 100))
         img.save(temp_img_path)
 
     try:
@@ -39,6 +51,7 @@ def test_preprocess_image():
 @patch('src.vision.classifier.load_model')
 @patch('src.vision.classifier.preprocess_image')
 def test_classify_image(mock_preprocess, mock_load):
+    """Verifica que classify_image retorna clase, confianza y top_3 correctos."""
     mock_pipe = MagicMock()
     mock_pipe.return_value = [
         {"label": "Class_A", "score": 0.95},
@@ -55,7 +68,34 @@ def test_classify_image(mock_preprocess, mock_load):
     assert result["confidence"] == 0.95
     assert len(result["top_3"]) == 3
     assert result["top_3"][0]["class"] == "Class_A"
-
     mock_load.assert_called_once()
     mock_preprocess.assert_called_once_with("dummy_path.jpg")
     mock_pipe.assert_called_once_with("mock_img")
+
+
+@patch('src.vision.mlflow_tracker.mlflow')
+def test_log_inference(mock_mlflow):
+    """Verifica que log_inference llama a MLflow con los parámetros correctos."""
+    mock_run = MagicMock()
+    mock_run.__enter__ = MagicMock(return_value=mock_run)
+    mock_run.__exit__ = MagicMock(return_value=False)
+    mock_mlflow.start_run.return_value = mock_run
+
+    from src.vision.mlflow_tracker import log_inference
+    log_inference(
+        model_name="test-model",
+        cache_dir="./cache",
+        predicted_class="Tomato_healthy",
+        confidence=0.95,
+        inference_time_ms=120.5
+    )
+
+    mock_mlflow.log_params.assert_called_once_with({
+        "model_name": "test-model",
+        "cache_dir": "./cache",
+    })
+    mock_mlflow.log_metrics.assert_called_once_with({
+        "confidence": 0.95,
+        "inference_time_ms": 120.5,
+    })
+    mock_mlflow.set_tag.assert_called_once_with("predicted_class", "Tomato_healthy")
