@@ -1,0 +1,142 @@
+# =====================================================
+# docker-compose.yml — PoC Asistente Fitosanitario con IA
+# UAO 2026 — Desarrollo de Proyectos de IA
+# =====================================================
+# Levanta los 5 servicios del sistema con un solo comando:
+#   docker compose up --build
+#
+# Servicios:
+#   mlflow    — Tracking de experimentos (puerto 5000)
+#   cv        — Servicio Vision Computacional gRPC (puerto 50051)
+#   nlp       — Servicio NLP gRPC (puerto 50052)
+#   app       — Interfaz Streamlit (puerto 8501)
+#
+# Prerequisitos:
+#   - Tener .env configurado con OPENAI_API_KEY
+#   - Docker Desktop corriendo
+# =====================================================
+
+services:
+
+  # ---------------------------------------------------
+  # MLflow — Tracking de experimentos y Model Registry
+  # Debe arrancar primero: cv depende de el
+  # ---------------------------------------------------
+  mlflow:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: poc_mlflow
+    command: ["uv", "run", "python", "mlflow_server.py"]
+    ports:
+      - "${MLFLOW_PORT:-5000}:5000"
+    environment:
+      - MLFLOW_HOST=0.0.0.0
+      - MLFLOW_PORT=${MLFLOW_PORT:-5000}
+      - MLFLOW_BACKEND_URI=${MLFLOW_BACKEND_URI:-./mlruns}
+      - MLFLOW_ARTIFACT_ROOT=${MLFLOW_ARTIFACT_ROOT:-./mlartifacts}
+    volumes:
+      # Persiste experimentos y artefactos fuera del contenedor
+      - mlflow_data:/app/mlruns
+      - mlflow_artifacts:/app/mlartifacts
+    networks:
+      - poc_network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  # ---------------------------------------------------
+  # Servicio CV — Vision Computacional gRPC
+  # Descarga MobileNetV2 desde HuggingFace en el primer arranque
+  # ---------------------------------------------------
+  cv:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: poc_cv
+    command: ["uv", "run", "python", "src/api/cv_server.py"]
+    ports:
+      - "${CV_SERVICE_PORT:-50051}:50051"
+    environment:
+      - CV_SERVICE_PORT=${CV_SERVICE_PORT:-50051}
+      - MLFLOW_TRACKING_URI=http://mlflow:${MLFLOW_PORT:-5000}
+      - HUGGINGFACE_TOKEN=${HUGGINGFACE_TOKEN:-}
+    volumes:
+      # Cachea el modelo para no descargarlo en cada arranque
+      - hf_cache:/app/hf_cache
+    networks:
+      - poc_network
+    depends_on:
+      mlflow:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # ---------------------------------------------------
+  # Servicio NLP — OpenAI GPT-5 Nano gRPC
+  # Requiere OPENAI_API_KEY en .env
+  # ---------------------------------------------------
+  nlp:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: poc_nlp
+    command: ["uv", "run", "python", "src/api/nlp_server.py"]
+    ports:
+      - "${NLP_SERVICE_PORT:-50052}:50052"
+    environment:
+      - NLP_SERVICE_PORT=${NLP_SERVICE_PORT:-50052}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+    networks:
+      - poc_network
+    restart: unless-stopped
+
+  # ---------------------------------------------------
+  # App — Interfaz Streamlit
+  # Orquesta las llamadas a cv y nlp via gRPC
+  # ---------------------------------------------------
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: poc_app
+    command: ["uv", "run", "streamlit", "run", "src/app/app.py",
+              "--server.port=8501", "--server.address=0.0.0.0"]
+    ports:
+      - "${APP_PORT:-8501}:8501"
+    environment:
+      - APP_PORT=${APP_PORT:-8501}
+      - CV_SERVICE_HOST=cv
+      - CV_SERVICE_PORT=${CV_SERVICE_PORT:-50051}
+      - NLP_SERVICE_HOST=nlp
+      - NLP_SERVICE_PORT=${NLP_SERVICE_PORT:-50052}
+      - MLFLOW_TRACKING_URI=http://mlflow:${MLFLOW_PORT:-5000}
+    networks:
+      - poc_network
+    depends_on:
+      - cv
+      - nlp
+    restart: unless-stopped
+
+# =====================================================
+# Volumes — persisten datos entre reinicios
+# =====================================================
+volumes:
+  mlflow_data:
+    name: poc_mlflow_data
+  mlflow_artifacts:
+    name: poc_mlflow_artifacts
+  hf_cache:
+    name: poc_hf_cache
+
+# =====================================================
+# Network — red interna entre servicios
+# Los servicios se comunican por nombre (cv, nlp, mlflow)
+# =====================================================
+networks:
+  poc_network:
+    name: poc_network
+    driver: bridge
