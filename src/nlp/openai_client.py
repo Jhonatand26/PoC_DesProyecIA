@@ -4,7 +4,9 @@ Cliente para la API de OpenAI GPT-5 Nano con reintentos automaticos.
 
 import os
 from openai import OpenAI, RateLimitError, APIConnectionError
-from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
+from tenacity import (
+    retry, stop_after_attempt, wait_exponential, retry_if_exception_type
+)
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -58,8 +60,10 @@ def get_recommendation(prompt: str) -> str:
             {
                 "role": "system",
                 "content": (
-                    "Eres un agronomo experto en cultivos del Valle del Cauca, Colombia. "
-                    "Siempre respondes en espanol con informacion practica para agricultores."
+                    "Eres un agronomo experto en cultivos "
+                    "del Valle del Cauca, Colombia. "
+                    "Siempre respondes en espanol con "
+                    "informacion practica para agricultores."
                 ),
             },
             {
