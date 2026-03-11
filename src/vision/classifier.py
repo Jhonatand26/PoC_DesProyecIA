@@ -13,6 +13,11 @@ MODEL_NAME = os.getenv(
     "linkanjarad/mobilenet_v2_1.0_224-plant-disease-identification"
 )
 CACHE_DIR = os.getenv("HF_CACHE_DIR", "./hf_cache")
+MODEL_VERSION = "v1.0"
+MODEL_SOURCE = (
+    "https://huggingface.co/"
+    "linkanjarad/mobilenet_v2_1.0_224-plant-disease-identification"
+)
 
 
 def classify_image(image_path: str) -> Dict[str, Any]:
@@ -39,7 +44,9 @@ def classify_image(image_path: str) -> Dict[str, Any]:
         cache_dir=CACHE_DIR,
         predicted_class=top_1["label"],
         confidence=float(top_1["score"]),
-        inference_time_ms=round(inference_time_ms, 2)
+        inference_time_ms=round(inference_time_ms, 2),
+        model_version=MODEL_VERSION,
+        model_source=MODEL_SOURCE,
     )
 
     return {

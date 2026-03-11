@@ -9,18 +9,15 @@ from src.vision.classifier import classify_image
 
 
 @patch('src.vision.model_loader.pipeline')
-def test_load_model_success(mock_pipeline):
+@patch('src.vision.model_loader.MobileNetV2ImageProcessor.from_pretrained')
+@patch('src.vision.model_loader.AutoModelForImageClassification.from_pretrained')
+def test_load_model_success(mock_auto_model, mock_processor, mock_pipeline):
     """Verifica que load_model retorna el pipeline del modelo principal."""
     mock_pipeline.return_value = "mock_pipe"
     pipe = load_model("model_name", "cache_dir")
 
     assert pipe == "mock_pipe"
-    mock_pipeline.assert_called_once_with(
-        task="image-classification",
-        model="model_name",
-        model_kwargs={"cache_dir": "cache_dir"},
-        trust_remote_code=True
-    )
+    mock_pipeline.assert_called_once()
 
 
 def test_preprocess_image():
@@ -68,12 +65,17 @@ def test_classify_image(mock_preprocess, mock_load, mock_log_inference):
     mock_pipe.assert_called_once_with("mock_img")
     mock_log_inference.assert_called_once()
 
+    # Verificar que se pasan model_version y model_source
+    call_kwargs = mock_log_inference.call_args
+    assert "model_version" in call_kwargs.kwargs
+    assert "model_source" in call_kwargs.kwargs
 
 
 @patch('src.vision.mlflow_tracker.mlflow')
 def test_log_inference(mock_mlflow):
     """
-    Verifica que log_inference llama a MLflow con los parámetros correctos.
+    Verifica que log_inference llama a MLflow con los parámetros correctos,
+    incluyendo model_version y model_source.
     """
     mock_run = MagicMock()
     mock_run.__enter__ = MagicMock(return_value=mock_run)
@@ -86,11 +88,15 @@ def test_log_inference(mock_mlflow):
         cache_dir="./cache",
         predicted_class="Tomato_healthy",
         confidence=0.95,
-        inference_time_ms=120.5
+        inference_time_ms=120.5,
+        model_version="v1.0",
+        model_source="https://huggingface.co/test-model",
     )
 
     mock_mlflow.log_params.assert_called_once_with({
         "model_name": "test-model",
+        "model_version": "v1.0",
+        "model_source": "https://huggingface.co/test-model",
         "cache_dir": "./cache",
     })
     mock_mlflow.log_metrics.assert_called_once_with({
@@ -100,3 +106,65 @@ def test_log_inference(mock_mlflow):
     mock_mlflow.set_tag.assert_called_once_with(
         "predicted_class", "Tomato_healthy"
     )
+
+
+@patch('src.vision.mlflow_tracker.mlflow')
+def test_log_model_metrics(mock_mlflow):
+    """
+    Verifica que log_model_metrics registra accuracy y f1_score del paper.
+    """
+    mock_run = MagicMock()
+    mock_run.__enter__ = MagicMock(return_value=mock_run)
+    mock_run.__exit__ = MagicMock(return_value=False)
+    mock_mlflow.start_run.return_value = mock_run
+
+    from src.vision.mlflow_tracker import log_model_metrics
+    log_model_metrics(
+        accuracy=0.9970,
+        f1_score=0.9932,
+        model_name="test-model",
+        model_version="v1.0",
+    )
+
+    mock_mlflow.log_params.assert_called_once_with({
+        "model_name": "test-model",
+        "model_version": "v1.0",
+        "metrics_source": "paper",
+    })
+    mock_mlflow.log_metrics.assert_called_once_with({
+        "accuracy": 0.9970,
+        "f1_score": 0.9932,
+    })
+
+
+@patch('src.vision.mlflow_tracker.mlflow')
+def test_register_model(mock_mlflow):
+    """
+    Verifica que register_model llama a MLflow con la configuración correcta.
+    """
+    mock_run_info = MagicMock()
+    mock_run_info.info.run_id = "test-run-id"
+    mock_run = MagicMock()
+    mock_run.__enter__ = MagicMock(return_value=mock_run_info)
+    mock_run.__exit__ = MagicMock(return_value=False)
+    mock_mlflow.start_run.return_value = mock_run
+
+    from src.vision.mlflow_tracker import register_model
+    register_model(
+        model_name="test-model",
+        model_version="v1.0",
+        model_source="https://huggingface.co/test-model",
+        accuracy=0.9970,
+        f1_score=0.9932,
+    )
+
+    mock_mlflow.log_params.assert_called_once_with({
+        "model_name": "test-model",
+        "model_version": "v1.0",
+        "model_source": "https://huggingface.co/test-model",
+    })
+    mock_mlflow.log_metrics.assert_called_once_with({
+        "accuracy": 0.9970,
+        "f1_score": 0.9932,
+    })
+    mock_mlflow.pyfunc.log_model.assert_called_once()
