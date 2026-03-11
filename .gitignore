@@ -8,3 +8,5 @@ __pycache__/
 
 # Model cache directory
 hf_cache/
+# Variables de entorno — credenciales
+.env
