@@ -1,0 +1,46 @@
+// =====================================================
+// vision.proto — Contrato gRPC del Servicio CV
+// PoC Asistente Fitosanitario con IA | UAO 2026
+// =====================================================
+// Define la comunicacion entre Streamlit y el Servicio
+// de Vision Computacional (MobileNetV2).
+// =====================================================
+
+syntax = "proto3";
+
+package vision;
+
+// ----------------------------------------------------
+// Servicio CV
+// Expone un unico metodo: ClassifyImage
+// ----------------------------------------------------
+service VisionService {
+  rpc ClassifyImage (ImageRequest) returns (ClassificationResponse);
+}
+
+// ----------------------------------------------------
+// Request — lo que Streamlit envia al Servicio CV
+// ----------------------------------------------------
+message ImageRequest {
+  bytes image_data = 1;      // Bytes crudos de la imagen JPG/PNG
+  string filename   = 2;     // Nombre del archivo (ej: hoja.jpg)
+}
+
+// ----------------------------------------------------
+// Prediction — una prediccion individual del top-3
+// ----------------------------------------------------
+message Prediction {
+  string label      = 1;     // Nombre de la clase
+  float  confidence = 2;     // Confianza entre 0.0 y 1.0
+}
+
+// ----------------------------------------------------
+// Response — lo que el Servicio CV devuelve a Streamlit
+// ----------------------------------------------------
+message ClassificationResponse {
+  string class_name  = 1;    // Clase con mayor confianza
+  float  confidence  = 2;    // Confianza de la clase principal
+  repeated Prediction top_3 = 3;  // Top 3 predicciones
+  bool   success     = 4;    // True si la inferencia fue exitosa
+  string error       = 5;    // Mensaje de error si success=false
+}

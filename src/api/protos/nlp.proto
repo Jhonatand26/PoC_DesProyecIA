@@ -1,0 +1,36 @@
+// =====================================================
+// nlp.proto — Contrato gRPC del Servicio NLP
+// PoC Asistente Fitosanitario con IA | UAO 2026
+// =====================================================
+// Define la comunicacion entre Streamlit y el Servicio
+// NLP (Google Gemini Flash 1.5).
+// =====================================================
+
+syntax = "proto3";
+
+package nlp;
+
+// ----------------------------------------------------
+// Servicio NLP
+// Expone un unico metodo: GetRecommendation
+// ----------------------------------------------------
+service NLPService {
+  rpc GetRecommendation (RecommendationRequest) returns (RecommendationResponse);
+}
+
+// ----------------------------------------------------
+// Request — lo que Streamlit envia al Servicio NLP
+// ----------------------------------------------------
+message RecommendationRequest {
+  string class_name  = 1;    // Clase detectada por el Servicio CV
+  float  confidence  = 2;    // Confianza del diagnostico CV
+}
+
+// ----------------------------------------------------
+// Response — lo que el Servicio NLP devuelve a Streamlit
+// ----------------------------------------------------
+message RecommendationResponse {
+  string recommendation = 1; // Recomendacion agronomica en Markdown
+  bool   success        = 2; // True si Gemini respondio correctamente
+  string error          = 3; // Mensaje de error si success=false
+}
