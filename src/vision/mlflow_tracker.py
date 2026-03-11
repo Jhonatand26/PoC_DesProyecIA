@@ -116,11 +116,9 @@ def register_model(
                 "accuracy": accuracy,
                 "f1_score": f1_score,
             })
-            mlflow.pyfunc.log_model(
-                artifact_path="model",
-                python_model=None,
-                registered_model_name=REGISTERED_MODEL_NAME,
-            )
-            print(f"Modelo registrado exitosamente (run_id={run.info.run_id})")
+            mlflow.set_tag("model_type", "huggingface")
+            mlflow.set_tag("registered_model_name", REGISTERED_MODEL_NAME)
+            print(f"Modelo logueado exitosamente (run_id={run.info.run_id})")
     except Exception as e:
         print(f"Error al registrar el modelo en MLflow: {e}")
+

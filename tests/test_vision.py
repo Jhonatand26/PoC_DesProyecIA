@@ -167,4 +167,4 @@ def test_register_model(mock_mlflow):
         "accuracy": 0.9970,
         "f1_score": 0.9932,
     })
-    mock_mlflow.pyfunc.log_model.assert_called_once()
+    mock_mlflow.set_tag.assert_any_call("model_type", "huggingface")
