@@ -27,19 +27,22 @@ def log_inference(
     :param confidence: Confianza de la predicción (0.0 - 1.0).
     :param inference_time_ms: Tiempo de inferencia en milisegundos.
     """
-    mlflow.set_tracking_uri(MLFLOW_TRACKING_URI)
-    mlflow.set_experiment(EXPERIMENT_NAME)
+    try:
+        mlflow.set_tracking_uri(MLFLOW_TRACKING_URI)
+        mlflow.set_experiment(EXPERIMENT_NAME)
 
-    with mlflow.start_run():
-        mlflow.log_params({
-            "model_name": model_name,
-            "cache_dir": cache_dir,
-        })
-        mlflow.log_metrics({
-            "confidence": confidence,
-            "inference_time_ms": inference_time_ms,
-        })
-        mlflow.set_tag("predicted_class", predicted_class)
+        with mlflow.start_run():
+            mlflow.log_params({
+                "model_name": model_name,
+                "cache_dir": cache_dir,
+            })
+            mlflow.log_metrics({
+                "confidence": confidence,
+                "inference_time_ms": inference_time_ms,
+            })
+            mlflow.set_tag("predicted_class", predicted_class)
+    except Exception as e:
+        print(f"Warning: No se pudo conectar a MLflow ({e})")
 
 
 def register_model(run_id: str) -> None:

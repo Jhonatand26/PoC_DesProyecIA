@@ -27,11 +27,7 @@ def classify_image(image_path: str) -> Dict[str, Any]:
     img = preprocess_image(image_path)
 
     start = time.time()
-    try:
-        results = pipe(img)
-    except Exception as e:
-        print(f"Bypass de preprocesador activado para fallback por: {e}.")
-        results = pipe(image_path)
+    results = pipe(img)
     inference_time_ms = (time.time() - start) * 1000
 
     sorted_results = sorted(results, key=lambda x: x["score"], reverse=True)
