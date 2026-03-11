@@ -3,7 +3,7 @@
 // PoC Asistente Fitosanitario con IA | UAO 2026
 // =====================================================
 // Define la comunicacion entre Streamlit y el Servicio
-// NLP (Google Gemini Flash 1.5).
+// NLP (OPENAI GPT-5 Nano).
 // =====================================================
 
 syntax = "proto3";
@@ -31,6 +31,6 @@ message RecommendationRequest {
 // ----------------------------------------------------
 message RecommendationResponse {
   string recommendation = 1; // Recomendacion agronomica en Markdown
-  bool   success        = 2; // True si Gemini respondio correctamente
+  bool   success        = 2; // True si GPTE respondio correctamente
   string error          = 3; // Mensaje de error si success=false
 }
