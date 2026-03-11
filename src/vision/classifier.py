@@ -22,11 +22,10 @@ MODEL_SOURCE = (
 
 def classify_image(image_path: str) -> Dict[str, Any]:
     """
-    Ejecuta la inferencia sobre una imagen y retorna los resultados.
-    Registra parámetros, métricas y tiempo de inferencia en MLflow.
+    Clasifica una imagen de hoja y retorna diagnóstico.
 
     :param image_path: Ruta de la imagen para clasificar.
-    :return: Diccionario con la clase ganadora, la confianza y el top 3.
+    :return: dict con keys: class_name, confidence, top_3
     """
     pipe = load_model(MODEL_NAME, CACHE_DIR)
     img = preprocess_image(image_path)
@@ -50,10 +49,10 @@ def classify_image(image_path: str) -> Dict[str, Any]:
     )
 
     return {
-        "class": top_1["label"],
+        "class_name": top_1["label"],
         "confidence": float(top_1["score"]),
         "top_3": [
-            {"class": r["label"], "confidence": float(r["score"])}
+            {"label": r["label"], "confidence": float(r["score"])}
             for r in top_3
         ]
     }

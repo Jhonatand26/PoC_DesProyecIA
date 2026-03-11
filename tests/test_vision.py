@@ -56,10 +56,10 @@ def test_classify_image(mock_preprocess, mock_load, mock_log_inference):
 
     result = classify_image("dummy_path.jpg")
 
-    assert result["class"] == "Class_A"
+    assert result["class_name"] == "Class_A"
     assert result["confidence"] == 0.95
     assert len(result["top_3"]) == 3
-    assert result["top_3"][0]["class"] == "Class_A"
+    assert result["top_3"][0]["label"] == "Class_A"
     mock_load.assert_called_once()
     mock_preprocess.assert_called_once_with("dummy_path.jpg")
     mock_pipe.assert_called_once_with("mock_img")
