@@ -10,3 +10,4 @@ __pycache__/
 hf_cache/
 # Variables de entorno — credenciales
 .env
+*.egg-info/
