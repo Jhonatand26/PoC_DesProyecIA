@@ -21,12 +21,13 @@ import grpc
 # Ejecutar desde la raiz del proyecto: uv run python src/api/nlp_server.py
 # ---------------------------------------------------------------------------
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "protos"))
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "nlp"))
+
 
 import nlp_pb2
 import nlp_pb2_grpc
-from prompt_builder import build_prompt
-from openai_client import get_recommendation
+
+from nlp.prompt_builder import build_prompt
+from nlp.openai_client import get_recommendation
 
 # ---------------------------------------------------------------------------
 # Configuracion de logging
