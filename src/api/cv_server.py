@@ -36,7 +36,6 @@ import grpc
 # Ejecutar desde la raiz del proyecto: uv run python src/api/cv_server.py
 # ---------------------------------------------------------------------------
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "protos"))
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "vision"))
 
 import vision_pb2
 import vision_pb2_grpc
@@ -45,15 +44,16 @@ import vision_pb2_grpc
 # Import del clasificador — con fallback al stub temporal
 # ---------------------------------------------------------------------------
 try:
-    from classifier import classify_image
+    from src.vision.classifier import classify_image
 
     _USING_STUB = False
     logging.getLogger(__name__).info("classifier.py cargado correctamente.")
-except ImportError:
+except ImportError as e:
     _USING_STUB = True
     logging.getLogger(__name__).warning(
         "classifier.py no encontrado — usando stub temporal. "
-        "El servidor funciona pero retorna datos ficticios."
+        "El servidor funciona pero retorna datos ficticios. Error: %s",
+        e,
     )
 
 # ---------------------------------------------------------------------------

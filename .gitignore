@@ -8,6 +8,12 @@ __pycache__/
 
 # Model cache directory
 hf_cache/
-# Variables de entorno — credenciales
+# Variables de entorno ï¿½ credenciales
 .env
-*.egg-info/
+
+#MlFlow
+mlruns/
+mlartifacts/
+
+#Entornos virtuales
+.venv/
