@@ -1,7 +1,7 @@
 """
 Módulo para la carga del modelo de clasificación de enfermedades de plantas.
 """
-from transformers import pipeline
+from transformers import pipeline, MobileNetV2ImageProcessor, AutoModelForImageClassification
 
 
 def load_model(model_name: str, cache_dir: str):
@@ -12,19 +12,20 @@ def load_model(model_name: str, cache_dir: str):
     :param cache_dir: Directorio local para guardar en caché.
     :return: Pipeline de transformers para clasificación de imágenes.
     """
-    try:
-        pipe = pipeline(
-            task="image-classification",
-            model=model_name,
-            model_kwargs={"cache_dir": cache_dir},
-            trust_remote_code=True
-        )
-    except ValueError:
-        print(f"Advertencia: Problema de arquitectura nativa en "
-              f"{model_name}. Usando fallback.")
-        pipe = pipeline(
-            task="image-classification",
-            model="google/vit-base-patch16-224",
-            model_kwargs={"cache_dir": cache_dir}
-        )
+    feature_extractor = MobileNetV2ImageProcessor.from_pretrained(
+
+        model_name,
+        cache_dir=cache_dir,
+        trust_remote_code=True
+    )
+    model = AutoModelForImageClassification.from_pretrained(
+        model_name,
+        cache_dir=cache_dir,
+        trust_remote_code=True
+    )
+    pipe = pipeline(
+        task="image-classification",
+        model=model,
+        feature_extractor=feature_extractor
+    )
     return pipe
