@@ -26,8 +26,8 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), "protos"))
 import nlp_pb2
 import nlp_pb2_grpc
 
-from nlp.prompt_builder import build_prompt
-from nlp.openai_client import get_recommendation
+from src.nlp.prompt_builder import build_prompt
+from src.nlp.openai_client import get_recommendation
 
 # ---------------------------------------------------------------------------
 # Configuracion de logging

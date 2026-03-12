@@ -28,11 +28,11 @@ Repositorio: github.com/Jhonatand26/PoC_DesProyecIA
 """
 
 from config import (
-    CV_SERVICE_HOST,   # Host del servicio CV (ej: "localhost")
-    CV_SERVICE_PORT,   # Puerto del servicio CV (ej: "50051")
+    CV_SERVICE_HOST,  # Host del servicio CV (ej: "localhost")
+    CV_SERVICE_PORT,  # Puerto del servicio CV (ej: "50051")
     NLP_SERVICE_HOST,  # Host del servicio NLP (ej: "localhost")
     NLP_SERVICE_PORT,  # Puerto del servicio NLP (ej: "50052")
-    USE_STUBS          # True = usar datos simulados, False = gRPC real
+    USE_STUBS,  # True = usar datos simulados, False = gRPC real
 )
 
 # ---------------------------------------------------------------------------
@@ -40,17 +40,16 @@ from config import (
 # Cuando los archivos .proto esten compilados con protoc y los servidores
 # gRPC esten listos, descomentar estas importaciones:
 #
-# import grpc
-# from src.api.protos import vision_pb2
-# from src.api.protos import vision_pb2_grpc
-# from src.api.protos import nlp_pb2
-# from src.api.protos import nlp_pb2_grpc
-# ---------------------------------------------------------------------------
-
+import grpc
+from src.api.protos import vision_pb2
+from src.api.protos import vision_pb2_grpc
+from src.api.protos import nlp_pb2
+from src.api.protos import nlp_pb2_grpc
 
 # ==========================================================================
 # FUNCIONES INTERNAS DE CONEXION
 # ==========================================================================
+
 
 def _create_cv_channel():
     """
@@ -74,9 +73,9 @@ def _create_cv_channel():
     # ---------------------------------------------------------------------------
     # >>> INTEGRACION JHONATAN — Descomentar cuando el servidor CV este listo:
     #
-    # target = f"{CV_SERVICE_HOST}:{CV_SERVICE_PORT}"
-    # channel = grpc.insecure_channel(target)
-    # return channel
+    target = f"{CV_SERVICE_HOST}:{CV_SERVICE_PORT}"
+    channel = grpc.insecure_channel(target)
+    return channel
     # ---------------------------------------------------------------------------
     pass  # STUB — no hay canal real en modo development
 
@@ -102,9 +101,9 @@ def _create_nlp_channel():
     # ---------------------------------------------------------------------------
     # >>> INTEGRACION JHONATAN — Descomentar cuando el servidor NLP este listo:
     #
-    # target = f"{NLP_SERVICE_HOST}:{NLP_SERVICE_PORT}"
-    # channel = grpc.insecure_channel(target)
-    # return channel
+    target = f"{NLP_SERVICE_HOST}:{NLP_SERVICE_PORT}"
+    channel = grpc.insecure_channel(target)
+    return channel
     # ---------------------------------------------------------------------------
     pass  # STUB — no hay canal real en modo development
 
@@ -112,6 +111,7 @@ def _create_nlp_channel():
 # ==========================================================================
 # STUBS SIMULADOS (MODO DEVELOPMENT)
 # ==========================================================================
+
 
 def _classify_image_stub(image_bytes):
     """
@@ -138,7 +138,7 @@ def _classify_image_stub(image_bytes):
             {"class_name": "Tomato___Late_blight", "confidence": 0.87},
             {"class_name": "Tomato___Early_blight", "confidence": 0.08},
             {"class_name": "Tomato___Leaf_Mold", "confidence": 0.03},
-        ]
+        ],
     }
 
 
@@ -192,6 +192,7 @@ def _get_recommendation_stub(class_name, confidence):
 # FUNCIONES PUBLICAS — Las unicas que app.py debe usar
 # ==========================================================================
 
+
 def classify_image(image_bytes):
     """
     Envia una imagen al Servicio CV y retorna el diagnostico.
@@ -225,42 +226,39 @@ def classify_image(image_bytes):
     # >>> INTEGRACION JHONATAN + JORGE LUIS — Llamada gRPC real
     # Descomentar cuando vision.proto este compilado y el servidor funcione:
     #
-    # channel = _create_cv_channel()
+    channel = _create_cv_channel()
     #
-    # try:
-    #     # Crear stub del cliente gRPC
-    #     stub = vision_pb2_grpc.VisionServiceStub(channel)
-    #
-    #     # Construir request con los bytes de la imagen
-    #     request = vision_pb2.ImageRequest(image_data=image_bytes)
-    #
-    #     # Enviar imagen y esperar respuesta (timeout 30 segundos)
-    #     response = stub.ClassifyImage(request, timeout=30)
-    #
-    #     # Convertir response protobuf a diccionario Python
-    #     # >>> PUNTO CLAVE DE BAJO ACOPLE: la conversion de protobuf
-    #     # a dict ocurre AQUI. app.py solo recibe un dict estandar.
-    #     top_3 = [
-    #         {
-    #             "class_name": pred.class_name,
-    #             "confidence": pred.confidence
-    #         }
-    #         for pred in response.top_predictions
-    #     ]
-    #
-    #     return {
-    #         "class_name": response.class_name,
-    #         "confidence": response.confidence,
-    #         "top_3": top_3
-    #     }
-    #
-    # except grpc.RpcError as e:
-    #     # Log del error para debugging
-    #     print(f"[ERROR] Servicio CV: {e.code()} - {e.details()}")
-    #     return None
-    #
-    # finally:
-    #     channel.close()
+    try:
+        # Crear stub del cliente gRPC
+        stub = vision_pb2_grpc.VisionServiceStub(channel)
+
+        # Construir request con los bytes de la imagen
+        request = vision_pb2.ImageRequest(image_data=image_bytes)
+
+        # Enviar imagen y esperar respuesta (timeout 30 segundos)
+        response = stub.ClassifyImage(request, timeout=30)
+
+        # Convertir response protobuf a diccionario Python
+        # >>> PUNTO CLAVE DE BAJO ACOPLE: la conversion de protobuf
+        # a dict ocurre AQUI. app.py solo recibe un dict estandar.
+        top_3 = [
+            {"class_name": pred.label, "confidence": pred.confidence}
+            for pred in response.top_3
+        ]
+
+        return {
+            "class_name": response.class_name,
+            "confidence": response.confidence,
+            "top_3": top_3,
+        }
+
+    except grpc.RpcError as e:
+        # Log del error para debugging
+        print(f"[ERROR] Servicio CV: {e.code()} - {e.details()}")
+        return None
+
+    finally:
+        channel.close()
     # ---------------------------------------------------------------------------
 
     return None  # Fallback si no hay stubs ni gRPC real
@@ -296,34 +294,33 @@ def get_recommendation(class_name, confidence):
     # >>> INTEGRACION JHONATAN + MATEO — Llamada gRPC real
     # Descomentar cuando nlp.proto este compilado y el servidor funcione:
     #
-    # channel = _create_nlp_channel()
-    #
-    # try:
-    #     # Crear stub del cliente gRPC
-    #     stub = nlp_pb2_grpc.NLPServiceStub(channel)
-    #
-    #     # Construir request con clase y confianza
-    #     request = nlp_pb2.RecommendationRequest(
-    #         class_name=class_name,
-    #         confidence=confidence
-    #     )
-    #
-    #     # Enviar diagnostico y esperar recomendacion (timeout 60s)
-    #     # Gemini Flash puede tardar mas que el modelo CV
-    #     response = stub.GetRecommendation(request, timeout=60)
-    #
-    #     # Retornar el texto plano de la recomendacion
-    #     # >>> PUNTO CLAVE DE BAJO ACOPLE: si Mateo cambia el formato
-    #     # del texto en prompt_builder.py, app.py no se entera
-    #     # porque solo recibe un string.
-    #     return response.recommendation
-    #
-    # except grpc.RpcError as e:
-    #     print(f"[ERROR] Servicio NLP: {e.code()} - {e.details()}")
-    #     return None
-    #
-    # finally:
-    #     channel.close()
+    channel = _create_nlp_channel()
+
+    try:
+        # Crear stub del cliente gRPC
+        stub = nlp_pb2_grpc.NLPServiceStub(channel)
+
+        # Construir request con clase y confianza
+        request = nlp_pb2.RecommendationRequest(
+            class_name=class_name, confidence=confidence
+        )
+
+        # Enviar diagnostico y esperar recomendacion (timeout 60s)
+        # Gemini Flash puede tardar mas que el modelo CV
+        response = stub.GetRecommendation(request, timeout=60)
+
+        # Retornar el texto plano de la recomendacion
+        # >>> PUNTO CLAVE DE BAJO ACOPLE: si Mateo cambia el formato
+        # del texto en prompt_builder.py, app.py no se entera
+        # porque solo recibe un string.
+        return response.recommendation
+
+    except grpc.RpcError as e:
+        print(f"[ERROR] Servicio NLP: {e.code()} - {e.details()}")
+        return None
+
+    finally:
+        channel.close()
     # ---------------------------------------------------------------------------
 
     return None  # Fallback si no hay stubs ni gRPC real
