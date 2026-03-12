@@ -1,0 +1,23 @@
+Metadata-Version: 2.4
+Name: poc-desproyecia
+Version: 0.1.0
+Summary: Add your description here
+Requires-Python: >=3.11
+Description-Content-Type: text/markdown
+Requires-Dist: flake8>=7.3.0
+Requires-Dist: grpcio>=1.78.0
+Requires-Dist: grpcio-tools>=1.78.0
+Requires-Dist: mlflow>=3.10.1
+Requires-Dist: numpy>=2.4.2
+Requires-Dist: openai>=2.26.0
+Requires-Dist: pillow>=12.1.1
+Requires-Dist: pytest>=9.0.2
+Requires-Dist: python-dotenv>=1.2.2
+Requires-Dist: streamlit>=1.55.0
+Requires-Dist: tenacity>=9.1.4
+Requires-Dist: torch>=2.10.0
+Requires-Dist: torchvision>=0.25.0
+Requires-Dist: transformers>=5.3.0
+
+# PoC_DesProyecIA
+Repositorio del desarrollo del PoC del curso Desarrollo de Proyectos de Inteligencia Artificial
