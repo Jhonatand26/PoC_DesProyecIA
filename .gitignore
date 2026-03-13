@@ -20,13 +20,17 @@ mlartifacts/
 .venv/
 
 # Egg info
-*.egg-info/
+poc_desproyecia.egg-info/  
 
 # IDE y herramientas
 .claude/
 .vscode/
 .idea/
+.github/
 
 # Archivos temporales
 *.tmp
 *.log
+
+#notebooks no se usaron
+notebooks/
