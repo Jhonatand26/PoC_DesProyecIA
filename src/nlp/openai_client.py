@@ -12,7 +12,10 @@ from dotenv import load_dotenv
 from src.nlp.mlflow_tracker import log_recommendation, setup_experiment
 
 load_dotenv()
-setup_experiment()
+
+# setup_experiment() se difiere a la primera llamada para no crashear
+# si MLflow aun no esta listo (ej: arranque de Docker Compose)
+_mlflow_initialized = False
 
 
 def _get_client() -> OpenAI:
@@ -60,6 +63,12 @@ def get_recommendation(
     """
     if not prompt or not prompt.strip():
         raise ValueError("El prompt no puede estar vacio.")
+
+    # Inicializar MLflow en la primera llamada (lazy init)
+    global _mlflow_initialized
+    if not _mlflow_initialized:
+        setup_experiment()
+        _mlflow_initialized = True
 
     client = _get_client()
 

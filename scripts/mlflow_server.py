@@ -20,6 +20,7 @@ Variables de entorno requeridas (.env):
 """
 
 import os
+import platform
 import subprocess
 import sys
 import logging
@@ -81,6 +82,12 @@ def serve() -> None:
         "--backend-store-uri",   config["backend_uri"],
         "--default-artifact-root", config["artifact_root"],
     ]
+
+    # En Docker (Linux) usar gunicorn con 1 worker para evitar
+    # el bloqueo de Host header de Werkzeug (DNS rebinding protection).
+    # En Windows (local) se usa el servidor Werkzeug por defecto.
+    if platform.system() != "Windows":
+        cmd.extend(["--workers", "1"])
 
     logger.info("Comando: %s", " ".join(cmd))
 

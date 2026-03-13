@@ -9,8 +9,8 @@ import grpc
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "src", "api", "protos"))
 
-import nlp_pb2
-import nlp_pb2_grpc
+import src.api.protos.nlp_pb2 as nlp_pb2
+import src.api.protos.nlp_pb2_grpc as nlp_pb2_grpc
 
 
 def test_servidor():

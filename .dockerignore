@@ -1,0 +1,44 @@
+# =====================================================
+# .dockerignore — PoC Asistente Fitosanitario con IA
+# =====================================================
+# Excluye archivos innecesarios del build context
+# para reducir el tamaño y acelerar el build.
+# =====================================================
+
+# --- Entornos virtuales ---
+.venv/
+
+# --- Cache de modelos HuggingFace (se descarga en runtime) ---
+hf_cache/
+
+# --- Datos de MLflow (se generan en runtime) ---
+mlruns/
+mlartifacts/
+
+# --- Git ---
+.git/
+.gitattributes
+
+# --- Cache de Python ---
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+*.egg-info/
+
+# --- IDE y herramientas ---
+.claude/
+.vscode/
+.idea/
+
+# --- Variables de entorno (secretos) ---
+.env
+
+# --- Archivos no esenciales para runtime ---
+notebooks/
+reports/
+docs/
+
+# --- Archivos temporales ---
+*.tmp
+*.log

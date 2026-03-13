@@ -5,21 +5,36 @@ limpiar:
 	cls
 	@echo "Limpiando el proyecto..."
 
-backend:
+visback:
 	@echo "Iniciando y compilando el backend..."
 	make limpiar 
-	pendiente por incluir todo lo del backend 
+	uv run python src/api/cv_server.py
 
-frontend:
+nlpback:
+	@echo "Iniciando y compilando el backend..."
+	make limpiar 
+	uv run python src/api/nlp_server.py
+
+front:
 	@echo "Iniciando y compilando el frontend..."
 	make limpiar 
-	pendiente por incluir todo lo del frontend
+	uv run streamlit run src/app/app.py
+
+mlflow:
+	@echo "Iniciando MLflow..."
+	make limpiar 
+	uv run python scripts/mlflow_server.py
+
 
 arbol:
 	@echo "Mostrando el Arbol de directorios del proyecto..."
 	make limpiar
 	tree /f
 
-docker: 
-	@echo "Construyendo la imagen de Docker..."
-	pendiente poner lo de doker
+docker:
+	@echo "Levantando servicios con Docker Compose..."
+	docker compose up --build
+
+docker-down:
+	@echo "Deteniendo servicios Docker..."
+	docker compose down
