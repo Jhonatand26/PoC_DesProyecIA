@@ -36,11 +36,10 @@ import grpc
 # Ajuste de path para importar desde src/api/protos
 # Ejecutar desde la raiz del proyecto: uv run python src/api/cv_server.py
 # ---------------------------------------------------------------------------
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "protos"))
 
 from src.vision.mlflow_tracker import log_inference
-import vision_pb2
-import vision_pb2_grpc
+from src.api.protos import vision_pb2
+from src.api.protos import vision_pb2_grpc
 
 # ---------------------------------------------------------------------------
 # Import del clasificador — con fallback al stub temporal
