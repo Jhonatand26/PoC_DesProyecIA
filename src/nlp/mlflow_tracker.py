@@ -8,7 +8,7 @@ Usa almacenamiento local en carpeta mlruns/.
 import os
 import mlflow
 
-EXPERIMENT_NAME = "nlp-gpt5-nano"
+EXPERIMENT_NAME = "nlp-gpt5-nano-v2"
 MLFLOW_TRACKING_URI = os.getenv("MLFLOW_TRACKING_URI", "http://localhost:5000")
 
 
@@ -48,6 +48,7 @@ def log_recommendation(
         latency_ms (float): Tiempo de respuesta en milisegundos.
     """
     try:
+        setup_experiment()
         with mlflow.start_run():
             mlflow.log_param("class_name", class_name)
             mlflow.log_param("confidence", confidence)
@@ -56,9 +57,7 @@ def log_recommendation(
 
             mlflow.log_metric("confidence_score", confidence)
             mlflow.log_metric("latency_ms", latency_ms)
-            mlflow.log_metric(
-                "recommendation_length", len(recommendation)
-            )
+            mlflow.log_metric("recommendation_length", len(recommendation))
             mlflow.log_metric("success_flag", 1 if success else 0)
 
             if error:

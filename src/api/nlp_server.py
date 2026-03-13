@@ -11,6 +11,7 @@ No contiene logica de IA. Solo traduce entre gRPC y los modulos NLP.
 
 import sys
 import os
+import time
 import logging
 from concurrent import futures
 
@@ -28,6 +29,7 @@ import nlp_pb2_grpc
 
 from src.nlp.prompt_builder import build_prompt
 from src.nlp.openai_client import get_recommendation
+from src.nlp.mlflow_tracker import setup_experiment, log_recommendation as mlflow_log
 
 # ---------------------------------------------------------------------------
 # Configuracion de logging
@@ -90,9 +92,21 @@ class NLPServiceServicer(nlp_pb2_grpc.NLPServiceServicer):
             prompt = build_prompt(request.class_name, request.confidence)
             logger.info("Prompt construido correctamente.")
 
+            # Medidr latencia real de la llamada a OPENAI
+            t_start = time.time()
             recommendation = get_recommendation(prompt)
+            latency_ms = (time.time() - t_start) * 1000  # Conversion a milisegundos
+            logger.info("Recomendacion obtenida en %.2f ms.", latency_ms)
             logger.info("Recomendacion recibida de GPT-5 Nano.")
-
+            # Registrar en MLflow — el servidor es dueño de esta métrica
+            mlflow_log(
+                class_name=request.class_name,
+                confidence=request.confidence,
+                prompt=prompt,
+                recommendation=recommendation,
+                success=True,
+                latency_ms=latency_ms,
+            )
             return nlp_pb2.RecommendationResponse(
                 recommendation=recommendation,
                 success=True,
@@ -116,6 +130,31 @@ class NLPServiceServicer(nlp_pb2_grpc.NLPServiceServicer):
                 success=False,
                 error=f"Error interno del servidor NLP: {e}",
             )
+        except EnvironmentError as e:
+            logger.error("Error de configuracion: %s", e)
+            mlflow_log(
+                class_name=request.class_name,
+                confidence=request.confidence,
+                prompt="",
+                recommendation="",
+                success=False,
+                error=str(e),
+            )
+        except Exception as e:
+            logger.error("Error inesperado: %s", e)
+            mlflow_log(
+                class_name=request.class_name,
+                confidence=request.confidence,
+                prompt="",
+                recommendation="",
+                success=False,
+                error=str(e),
+            )
+            return nlp_pb2.RecommendationResponse(
+                recommendation="",
+                success=False,
+                error=f"Error interno del servidor NLP: {e}",
+            )
 
 
 # ---------------------------------------------------------------------------
@@ -131,6 +170,8 @@ def serve() -> None:
     from dotenv import load_dotenv
 
     load_dotenv()
+    setup_experiment()  # Configura MLflow para tracking
+    logger.info("MLflow experiment configurado: nlp-gpt5-nano-v2")
 
     port = os.getenv("NLP_SERVICE_PORT", "50052")
     address = f"[::]:{port}"

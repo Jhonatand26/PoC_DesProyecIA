@@ -1,13 +1,14 @@
 """
 Módulo para el registro de experimentos y modelos en MLflow.
 """
+
 import os
 import mlflow
 import mlflow.pyfunc
 
 
 MLFLOW_TRACKING_URI = os.getenv("MLFLOW_TRACKING_URI", "http://localhost:5000")
-EXPERIMENT_NAME = "plant-disease-cv"
+EXPERIMENT_NAME = "plant-disease-cv-v2"
 REGISTERED_MODEL_NAME = "mobilenet-plant-disease"
 
 
@@ -39,18 +40,21 @@ def log_inference(
     """
     try:
         _init_mlflow()
-
         with mlflow.start_run():
-            mlflow.log_params({
-                "model_name": model_name,
-                "model_version": model_version,
-                "model_source": model_source,
-                "cache_dir": cache_dir,
-            })
-            mlflow.log_metrics({
-                "confidence": confidence,
-                "inference_time_ms": inference_time_ms,
-            })
+            mlflow.log_params(
+                {
+                    "model_name": model_name,
+                    "model_version": model_version,
+                    "model_source": model_source,
+                    "cache_dir": cache_dir,
+                }
+            )
+            mlflow.log_metrics(
+                {
+                    "confidence": confidence,
+                    "inference_time_ms": inference_time_ms,
+                }
+            )
             mlflow.set_tag("predicted_class", predicted_class)
     except Exception as e:
         print(f"Warning: No se pudo conectar a MLflow ({e})")
@@ -74,15 +78,19 @@ def log_model_metrics(
         _init_mlflow()
 
         with mlflow.start_run():
-            mlflow.log_params({
-                "model_name": model_name,
-                "model_version": model_version,
-                "metrics_source": "paper",
-            })
-            mlflow.log_metrics({
-                "accuracy": accuracy,
-                "f1_score": f1_score,
-            })
+            mlflow.log_params(
+                {
+                    "model_name": model_name,
+                    "model_version": model_version,
+                    "metrics_source": "paper",
+                }
+            )
+            mlflow.log_metrics(
+                {
+                    "accuracy": accuracy,
+                    "f1_score": f1_score,
+                }
+            )
     except Exception as e:
         print(f"Warning: No se pudo conectar a MLflow ({e})")
 
@@ -107,15 +115,19 @@ def register_model(
         _init_mlflow()
 
         with mlflow.start_run() as run:
-            mlflow.log_params({
-                "model_name": model_name,
-                "model_version": model_version,
-                "model_source": model_source,
-            })
-            mlflow.log_metrics({
-                "accuracy": accuracy,
-                "f1_score": f1_score,
-            })
+            mlflow.log_params(
+                {
+                    "model_name": model_name,
+                    "model_version": model_version,
+                    "model_source": model_source,
+                }
+            )
+            mlflow.log_metrics(
+                {
+                    "accuracy": accuracy,
+                    "f1_score": f1_score,
+                }
+            )
             mlflow.set_tag("model_type", "huggingface")
             mlflow.set_tag("registered_model_name", REGISTERED_MODEL_NAME)
             print(f"Modelo logueado exitosamente (run_id={run.info.run_id})")

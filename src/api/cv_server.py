@@ -23,6 +23,7 @@ NOTA PARA EL EQUIPO:
             }
 """
 
+import time
 import sys
 import os
 import logging
@@ -37,6 +38,7 @@ import grpc
 # ---------------------------------------------------------------------------
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "protos"))
 
+from src.vision.mlflow_tracker import log_inference
 import vision_pb2
 import vision_pb2_grpc
 
@@ -149,6 +151,27 @@ class VisionServiceServicer(vision_pb2_grpc.VisionServiceServicer):
                 tmp_path = tmp_file.name
 
             logger.info("Imagen guardada en temporal: %s", tmp_path)
+            # Medir latencia real de la inferencia
+            t_start = time.time()
+            result = _classify_fn(tmp_path)
+            inference_time_ms = (time.time() - t_start) * 1000
+
+            logger.info(
+                "Clasificacion exitosa — clase: '%s' | confianza: %.2f",
+                result["class_name"],
+                result["confidence"],
+            )
+
+            # Registrar en MLflow — el servidor es dueño de esta métrica
+            log_inference(
+                model_name="linkanjarad/mobilenet_v2_1.0_224-plant-disease-identification",
+                cache_dir=os.getenv("HF_HOME", "./models"),
+                predicted_class=result["class_name"],
+                confidence=result["confidence"],
+                inference_time_ms=inference_time_ms,
+                model_version="v1.0",
+                model_source="https://huggingface.co/linkanjarad/mobilenet_v2_1.0_224-plant-disease-identification",
+            )
 
             # --- Clasificacion ----------------------------------------------
             result = _classify_fn(tmp_path)
@@ -177,6 +200,15 @@ class VisionServiceServicer(vision_pb2_grpc.VisionServiceServicer):
 
         except Exception as e:
             logger.error("Error en clasificacion: %s", e)
+            # Registrar el fallo también — trazabilidad completa
+            log_inference(
+                model_name="linkanjarad/mobilenet_v2_1.0_224-plant-disease-identification",
+                cache_dir=os.getenv("HF_HOME", "./models"),
+                predicted_class="ERROR",
+                confidence=0.0,
+                inference_time_ms=0.0,
+                model_version="v1.0",
+            )
             return vision_pb2.ClassificationResponse(
                 class_name="",
                 confidence=0.0,
