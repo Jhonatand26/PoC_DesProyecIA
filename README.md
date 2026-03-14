@@ -28,8 +28,6 @@ La comunicación entre servicios se realiza mediante **gRPC** (Google Remote Pro
 
 ## Capturas de Pantalla
 
-> 📸 Agrega las capturas en `docs/images/` y descomenta las líneas correspondientes.
-
 ![Pantalla de bienvenida](docs/images/wizard_step1.png)
 ![Diagnóstico con resultado](docs/images/wizard_diagnosis.png)
 ![MLflow con runs registrados](docs/images/mlflow_runs.png)
