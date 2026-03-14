@@ -66,6 +66,14 @@ La comunicación entre servicios se realiza mediante **gRPC** (Google Remote Pro
 | **MLflow** | 5000 | MLflow Tracking Server | Registro de experimentos y métricas |
 
 ---
+## Diagrama de Clases
+## Diagramas de Clases
+
+### Módulos y Dependencias
+![Diagrama de módulos](docs/images/diagrama_modulos.svg)
+
+### Servicers gRPC
+![Diagrama gRPC](docs/images/diagrama_grpc.svg)
 
 ## Modelos de IA
 

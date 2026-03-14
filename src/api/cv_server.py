@@ -172,14 +172,6 @@ class VisionServiceServicer(vision_pb2_grpc.VisionServiceServicer):
                 model_source="https://huggingface.co/linkanjarad/mobilenet_v2_1.0_224-plant-disease-identification",
             )
 
-            # --- Clasificacion ----------------------------------------------
-            result = _classify_fn(tmp_path)
-            logger.info(
-                "Clasificacion exitosa — clase: '%s' | confianza: %.2f",
-                result["class_name"],
-                result["confidence"],
-            )
-
             # --- Construir top_3 para el response ---------------------------
             top_3_predictions = [
                 vision_pb2.Prediction(
