@@ -108,15 +108,16 @@ class TestGetRecommendation:
         """Helper: construye un mock de la respuesta de OpenAI."""
         return MagicMock(choices=[MagicMock(message=MagicMock(content=content))])
 
-    @patch("src.nlp.openai_client.OpenAI")
+    @patch("src.nlp.openai_client.setup_experiment")
+    @patch("src.nlp.openai_client._get_client")
     @patch("src.nlp.openai_client.log_recommendation")
-    def test_retorna_texto_sin_espacios_extremos(self, mock_log, mock_openai_class):
+    def test_retorna_texto_sin_espacios_extremos(self, mock_log, mock_get_client, mock_setup):
         """
         La respuesta de OpenAI puede tener espacios al inicio/final.
         get_recommendation debe aplicar strip() antes de retornar.
         """
         mock_client = MagicMock()
-        mock_openai_class.return_value = mock_client
+        mock_get_client.return_value = mock_client
         mock_client.chat.completions.create.return_value = self._mock_openai_response(
             "  Recomendacion con espacios  "
         )
@@ -125,15 +126,16 @@ class TestGetRecommendation:
 
         assert resultado == "Recomendacion con espacios"
 
-    @patch("src.nlp.openai_client.OpenAI")
+    @patch("src.nlp.openai_client.setup_experiment")
+    @patch("src.nlp.openai_client._get_client")
     @patch("src.nlp.openai_client.log_recommendation")
-    def test_llama_a_gpt5_nano(self, mock_log, mock_openai_class):
+    def test_llama_a_gpt5_nano(self, mock_log, mock_get_client, mock_setup):
         """
         get_recommendation debe usar el modelo gpt-5-nano.
         Cambiar el modelo por error consumiria creditos de un modelo mas caro.
         """
         mock_client = MagicMock()
-        mock_openai_class.return_value = mock_client
+        mock_get_client.return_value = mock_client
         mock_client.chat.completions.create.return_value = self._mock_openai_response(
             "respuesta"
         )
@@ -143,15 +145,16 @@ class TestGetRecommendation:
         call_kwargs = mock_client.chat.completions.create.call_args
         assert call_kwargs.kwargs["model"] == "gpt-5-nano"
 
-    @patch("src.nlp.openai_client.OpenAI")
+    @patch("src.nlp.openai_client.setup_experiment")
+    @patch("src.nlp.openai_client._get_client")
     @patch("src.nlp.openai_client.log_recommendation")
-    def test_prompt_se_incluye_en_mensaje_user(self, mock_log, mock_openai_class):
+    def test_prompt_se_incluye_en_mensaje_user(self, mock_log, mock_get_client, mock_setup):
         """
         El prompt recibido debe enviarse en el rol 'user' del request.
         Es el contrato de entrada con el servidor NLP.
         """
         mock_client = MagicMock()
-        mock_openai_class.return_value = mock_client
+        mock_get_client.return_value = mock_client
         mock_client.chat.completions.create.return_value = self._mock_openai_response(
             "respuesta"
         )
@@ -164,15 +167,16 @@ class TestGetRecommendation:
         assert len(user_messages) == 1
         assert user_messages[0]["content"] == "mi prompt agronomico"
 
-    @patch("src.nlp.openai_client.OpenAI")
+    @patch("src.nlp.openai_client.setup_experiment")
+    @patch("src.nlp.openai_client._get_client")
     @patch("src.nlp.openai_client.log_recommendation")
-    def test_sistema_tiene_contexto_agronomico(self, mock_log, mock_openai_class):
+    def test_sistema_tiene_contexto_agronomico(self, mock_log, mock_get_client, mock_setup):
         """
         El mensaje de sistema debe incluir contexto agronomico del Valle del Cauca.
         Sin contexto, GPT generaria respuestas genericas sin valor local.
         """
         mock_client = MagicMock()
-        mock_openai_class.return_value = mock_client
+        mock_get_client.return_value = mock_client
         mock_client.chat.completions.create.return_value = self._mock_openai_response(
             "respuesta"
         )
@@ -195,15 +199,16 @@ class TestGetRecommendation:
         with pytest.raises(ValueError):
             get_recommendation("   ")
 
-    @patch("src.nlp.openai_client.OpenAI")
+    @patch("src.nlp.openai_client.setup_experiment")
+    @patch("src.nlp.openai_client._get_client")
     @patch("src.nlp.openai_client.log_recommendation")
-    def test_registra_en_mlflow_al_exito(self, mock_log, mock_openai_class):
+    def test_registra_en_mlflow_al_exito(self, mock_log, mock_get_client, mock_setup):
         """
         Cuando la llamada a OpenAI es exitosa, debe llamarse log_recommendation
         con success=True. Garantiza trazabilidad en MLflow.
         """
         mock_client = MagicMock()
-        mock_openai_class.return_value = mock_client
+        mock_get_client.return_value = mock_client
         mock_client.chat.completions.create.return_value = self._mock_openai_response(
             "recomendacion exitosa"
         )

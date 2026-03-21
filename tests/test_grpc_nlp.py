@@ -246,9 +246,10 @@ class TestVisionServiceServicer:
         assert response.error != ""
         channel.close()
 
+    @patch("src.api.cv_server.log_inference")
     @patch("src.api.cv_server._classify_fn")
     def test_clasificacion_exitosa_retorna_contrato_completo(
-        self, mock_classify, servidor_cv
+        self, mock_classify, mock_log_inf, servidor_cv
     ):
         """
         Con una imagen valida, la respuesta debe cumplir el contrato completo:
